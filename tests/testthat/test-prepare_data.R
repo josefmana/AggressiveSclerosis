@@ -7,6 +7,8 @@ test_that("each patient's demography once", {
 
 test_that("nothing from the future", {
   expect_true(all(na.omit(raw_data$id$birth < Sys.time())))
+  expect_true(all(na.omit(raw_data$id$onset < Sys.time())))
+  expect_true(all(na.omit(raw_data$id$birth < raw_data$id$birth))) # No onset before birth
   expect_true(all(na.omit(raw_data$treatment$start_date < Sys.time())))
   expect_true(all(na.omit(raw_data$treatment$end_date < Sys.time())))
   expect_true(all(na.omit(raw_data$relapses$relapse_date < Sys.time())))
