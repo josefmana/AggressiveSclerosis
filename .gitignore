@@ -1,3 +1,11 @@
+# Folders not to be shared
+_nogit/
+
+# Files not to be shared
+*.pdf
+*.xls
+*.xlsx
+
 # History files
 .Rhistory
 .Rapp.history
