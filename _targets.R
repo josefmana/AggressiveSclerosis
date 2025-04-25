@@ -1,4 +1,5 @@
 # Load packages required to define the pipeline:
+library(tidyverse) |> suppressPackageStartupMessages()
 library(targets)
 # library(tarchetypes) # Load other packages as needed.
 
@@ -15,5 +16,13 @@ tar_source()
 
 # Prepare the target list:
 list(
-  NULL
+  tar_target(
+    name = data_file,
+    command = here::here("data-raw", "pro Josef Mana imed export 28_3_2025 data.xlsx"),
+    format = "file"
+  ),
+  tar_target(
+    name = raw_data,
+    command = prepare_data(data_file)
+  )
 )
