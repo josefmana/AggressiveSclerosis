@@ -16,6 +16,14 @@ targets::tar_make()
 ```
 
 Maybe in future, we publish the code. We do not plan to publish it as a package,
-rather as `_target.R`, `R/` and maybe `reports/` or later `manuscript/` folders.
+rather as `_targets.R`, `R/` and maybe `reports/` or later `manuscript/` folders.
+
+If you have the raw data Excel file, save it in `data-raw` as `some_data_name.xlsx`.
+Then run the following code to classify patient into "aggressive disease" category:
+```r
+p <- here::here("data-raw", "some_data_name.xlsx")
+d <- prepare_data(p)
+data <- determine_aggressive_phenotype(d$id, d$relapses, d$edss, T)
+```
 
 ```

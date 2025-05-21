@@ -24,5 +24,9 @@ list(
   tar_target(
     name = raw_data,
     command = prepare_data(data_file)
+  ),
+  tar_target(
+    name = classified_data,
+    command = determine_aggressive_phenotype(demographics = raw_data$id, relapses = raw_data$relapses, edss = raw_data$edss, eye_check = F) |> suppressWarnings()
   )
 )
