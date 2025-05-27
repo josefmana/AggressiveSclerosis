@@ -131,7 +131,7 @@ Patients with these data are dropped from further analyses.\n\n")
 
   # Criterion (v)
   N4 <- length(unique(d4$id))
-  message("\nEvaluating the final criterion - EDSS ≥ 6 reamining until the end of observation period ...\n\n")
+  message("\nEvaluating the final criterion - EDSS ≥ 6 remaining until the end of observation period ...\n\n")
   d5 <- # Keep only cases with a valid last EDSS observation ≥ 6
     d4 |>
     left_join(
