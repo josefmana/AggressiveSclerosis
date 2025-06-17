@@ -1,11 +1,10 @@
-#' Determine whether patients' MS can be regarded
-#' as aggressive.
+#' Determine whether patients' MS can be regarded as aggressive.
 #'
-#' The function uses the following criteria to
-#' determined whether patient ought to be regarded
-#' as suffering aggressive form MS:
-#' (i) at least 10 years of disease duration,
-#' (ii) EDSS ≥ 6 appeared within the first 10
+#' The function uses the following criteria to determined whether
+#' patient ought to be regarded as suffering aggressive form MS:
+#' (i) do not suffer Primary Progressive phenotype
+#' (ii) at least 10 years of disease duration,
+#' (iii) EDSS ≥ 6 appeared within the first 10
 #' years of the disease,
 #' (iii) EDSS ≥ 6 sustained for at least 6 months
 #' after it appeared,
@@ -15,17 +14,16 @@
 #' be met:
 #' (suppl.) EDSS ≥ 6 was NOT within 30 days after relapse
 #'
-#' @param demographics A tibble with basic demographic
-#' variables.
+#' @param demographics A tibble with basic demographic variables.
 #' @param relapses A tibble with relapse dates.
 #' @param edss A tibble with EDSS scores.
-#' @param eye_check A logical indicating whether plots
-#' of patients classified as suffering the aggressive
-#' disease form should be plotted for manual control.
+#' @param eye_check A logical indicating whether plots of patients
+#' classified as suffering the aggressive disease form should be
+#' plotted for manual control.
 #'
-#' @returns A list with a tibble containing demographic
-#' data with added column denoting aggressive disease
-#' ($data) and text summarising the process ($text).
+#' @returns A list with a tibble containing demographic data with
+#' added column denoting aggressive disease ($data) and text
+#' summarising the process ($text).
 #'
 #' @examples
 #' \dontrun{
@@ -40,7 +38,7 @@ determine_aggressive_phenotype <- function(demographics, relapses, edss, eye_che
   d0 <- # Add time stamps to EDSS assessments.
     left_join(
       edss,
-      demographics |> select(id, onset),
+      demographics |> select(id, onset, phenotype),
       by = "id"
     ) |>
     mutate(
@@ -50,13 +48,20 @@ determine_aggressive_phenotype <- function(demographics, relapses, edss, eye_che
     d0$id |>
     unique()
 
+  #
+  N0 <- length(unique(d0$id)) # Original number of patients.
+  pp_ids <- unique(subset(d0, phenotype == "PP")$id)
+  no_pp <- length(pp_ids)
+  d0 <- subset(d0, phenotype != "PP")
+  cat(glue::glue("\nDropping {no_pp} out of {N0} patients due to PP.\n\n"))
+
   # Print cases with negative disease duration and drop them from further analysis:
   negative_cases <- subset(d0, edss_time < 0)
   print(negative_cases, n = Inf)
   message("\nThe cases printed above show negative disease duration at the time of EDSS assessment.
 Patients with these data are dropped from further analyses.\n\n")
   # Drop data of patients with negative cases:
-  N0 <- length(unique(d0$id)) # Original number of patients.
+  N0 <- length(unique(d0$id)) # New original number of patients.
   negative_ids <- unique(negative_cases$id)
   incl_ids0 <- unique_ids[!(unique_ids %in% negative_ids)]
   no_dropped0 <- length(negative_ids)
