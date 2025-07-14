@@ -1,16 +1,18 @@
-#' Helper function to specify structure for data import.
+#' Helper function to specify structure for data import
 #'
-#' The function is supposed to be used in a wrapper
-#' \code{prepare_data} and interrogate anytime the
-#' source data file structure changes.
+#' This function defines the expected structure of the source data file.
+#' It is intended to be used inside the \code{prepare_data} wrapper and
+#' should be consulted whenever the structure of the source data file changes.
 #'
-#' @param show A logical indicating whether the
-#' list containing expected data structure ought
-#' to be printed (default, TRUE) or not (FALSE).
+#' @param show Logical; if \code{TRUE} (default), prints the list containing
+#' the expected data structure. If \code{FALSE}, does not print.
 #'
-#' @returns A list containing excel lists names,
-#' labels to be used in data and column types
-#' specification.
+#' @return A list containing:
+#' \describe{
+#'   \item{sheet names}{Expected names of Excel sheets to import.}
+#'   \item{labels}{Labels to be used within the dataset.}
+#'   \item{col_types}{Specifications of expected column types.}
+#' }
 #'
 #' @export
 specify_data_structure <- function(show = TRUE) {
