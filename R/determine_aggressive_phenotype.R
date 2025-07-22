@@ -31,7 +31,7 @@
 #' p <- here::here("data-raw", "some-cool-file-name.xlsx")
 #' d <- prepare_data(p)
 #' outcome_data <- determine_aggressive_phenotype(
-#'   d$demographics, d$relapses, d$edss, eye_check = TRUE
+#'   d$id, d$relapses, d$edss, eye_check = TRUE
 #' )
 #' }
 #' @export
@@ -135,7 +135,7 @@ determine_aggressive_phenotype <- function(demographics, relapses, edss, eye_che
     ) |>
     suppressMessages() |>
     arrange(id)
-  # Extract patients who fulfil criteria for aggressive MS:
+  # Extract patients who fulfill criteria for aggressive MS:
   aggressiveMS <- sapply(unique(d6$id), function(i) {
     all(na.omit(subset(d6, id == i)$edss >= 6))
   })
