@@ -18,8 +18,8 @@ tar_source()
 list(
   tar_target(
     name = data_file,
-    command = here::here("data-raw", "pro Josef Mana imed export 28_3_2025 data.xlsx"),
-    #command = "/Volumes/Extreme SSD/Joska Mana/pro Josef Mana imed export 28_3_2025 data.xlsx",
+    #command = here::here("data-raw", "pro Josef Mana imed export 28_3_2025 data.xlsx"),
+    command = "/Volumes/Extreme SSD/Joska Mana/pro Josef Mana imed export 28_3_2025 data.xlsx",
     format = "file"
   ),
   tar_target(
@@ -28,6 +28,11 @@ list(
   ),
   tar_target(
     name = classified_data,
-    command = determine_aggressive_phenotype(demographics = raw_data$id, relapses = raw_data$relapses, edss = raw_data$edss, eye_check = F) |> suppressWarnings()
+    command = determine_aggressive_phenotype(
+      demographics = raw_data$id,
+      relapses = raw_data$relapses,
+      edss = raw_data$edss,
+      eye_check = FALSE
+    ) |> suppressWarnings()
   )
 )

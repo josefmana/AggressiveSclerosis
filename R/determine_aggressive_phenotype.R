@@ -45,30 +45,39 @@ determine_aggressive_phenotype <- function(demographics, relapses, edss, eye_che
     mutate(
       edss_time = time_length(difftime(visit_date, onset), "years")
     )
-  # Extract patients' IDs:
-  unique_ids <- unique(d0$id)
   # Correct cases with negative disease duration during assessment:
   d0 <- recode_typos(d0)
+  # Extract patients' IDs:
+  unique_ids <- unique(d0$id)
   # Drop patients with primary progressive phenotype:
   N0 <- length(unique_ids) # Original number of patients.
-  pp_ids <- unique(subset(d0, phenotype == "PP")$id)
-  no_pp <- length(pp_ids)
-  d1 <- subset(d0, phenotype != "PP")
+  lowobs_ids <- d0 |>
+    group_by(id) |>
+    summarise(obs = n()) |>
+    filter(obs < 4) |>
+    pull(id)
+  no_lowobs <- length(lowobs_ids)
+  d1 <- subset(d0, !id %in% lowobs_ids)
   incl_ids0 <- unique(d1$id)
-  cat(glue::glue("\nDropping {no_pp} out of {N0} patients with the primary progressive phenotype.\n\n"))
+  cat(glue::glue("\nDropping {no_lowobs} out of {N0} patients with less than four EDSS measurements.\n\n"))
+  # Drop patients with primary progressive phenotype:
+  N1 <- length(incl_ids0)
+  pp_ids <- unique(subset(d1, phenotype == "PP" | is.na(phenotype))$id)
+  no_pp <- length(pp_ids)
+  d2 <- subset(d1, phenotype != "PP")
+  incl_ids1 <- unique(d2$id)
+  cat(glue::glue("\nDropping {no_pp} out of {N1} patients with the primary progressive or missing phenotype.\n\n"))
   # Disease duration has to be at least 10 years:
   message("\nEvaluating the first criterion - disease duration ≥ 10 years ... \n\n")
-  N1 <- length(incl_ids0)
-  incl_ids1 <- # All patients with at least one EDSS recorded at disease duration ≥ 10 years
-    d1 |>
+  N2 <- length(incl_ids1)
+  incl_ids2 <- d2 |> # All patients with at least one EDSS recorded at disease duration ≥ 10 years
     filter(edss_time >= 10) |>
-    select(id) |>
-    pull() |>
+    pull(id) |>
     unique()
-  excl_ids1 <- c(na.omit(incl_ids0[!(incl_ids0 %in% incl_ids1)]))
-  no_dropped1 <- length(excl_ids1)
-  cat(glue::glue("\nDropping {no_dropped1} out of {N1} remaining patients.\n\n"))
-  d2 <- subset(d1, !(id %in% excl_ids1)) |>
+  excl_ids2 <- c(na.omit(incl_ids1[!incl_ids1 %in% incl_ids2]))
+  no_dropped2 <- length(excl_ids2)
+  cat(glue::glue("\nDropping {no_dropped2} out of {N2} remaining patients.\n\n"))
+  d3 <- subset(d2, !id %in% excl_ids2) |>
     mutate(days_after_relapse = sapply(
       seq_len(length(visit_date)), function(i) {
         rels <- relapses[relapses$id == id[i], "relapse_date"]
@@ -82,42 +91,37 @@ determine_aggressive_phenotype <- function(demographics, relapses, edss, eye_che
     ))
   # EDSS of at minimum 6 appeared withing the first 10 years of disease:
   message("\nEvaluating the second criterion - EDSS ≥ 6 within the first 10 years of disease ...\n\n")
-  N2 <- length(unique(d2$id))
-  incl_ids2 <-
-    d2 |>
-    filter(edss_time < 10 & edss >= 6 & days_after_relapse > 30) |>
-    select(id) |>
-    pull() |>
-    unique()
-  excl_ids2 <- c(na.omit(incl_ids1[!(incl_ids1 %in% incl_ids2)]))
-  no_dropped2 <- length(excl_ids2)
-  cat(glue::glue("\nDropping {no_dropped2} out of {N2} remaining patients.\n\n"))
-  d3 <- subset(d2, !(id %in% excl_ids2))
-  # EDSS 6 or more shall be sustained:
   N3 <- length(unique(d3$id))
+  incl_ids3 <- d3 |>
+    filter(edss_time < 10 & edss >= 6 & days_after_relapse > 30) |>
+    pull(id) |>
+    unique()
+  excl_ids3 <- c(na.omit(incl_ids2[!incl_ids2 %in% incl_ids3]))
+  no_dropped3 <- length(excl_ids3)
+  cat(glue::glue("\nDropping {no_dropped3} out of {N3} remaining patients.\n\n"))
+  d4 <- subset(d3, !id %in% excl_ids3)
+  # EDSS 6 or more shall be sustained:
+  N4 <- length(unique(d4$id))
   message("\nEvaluating the third criterion - EDSS ≥ 6 sustained for at least 6 months ...\n\n")
-  incl_ids3 <-
-    d3 |>
+  incl_ids4 <- d4 |>
     filter(edss >= 6 & days_after_relapse > 30) |>
     group_by(id) |>
     filter(row_number() == 1 | row_number() == n()) |>
-    summarise(diff = max(edss_time)-min(edss_time)) |>
-    ungroup() |>
+    summarise(diff = max(edss_time) - min(edss_time), .groups = "drop") |>
     filter(diff > 0.5) |>
-    select(id) |>
-    pull() |>
+    pull(id) |>
     unique()
-  excl_ids3 <- c(na.omit(incl_ids2[!(incl_ids2 %in% incl_ids3)]))
-  no_dropped3 <- length(excl_ids3)
-  cat(glue::glue("\nDropping {no_dropped3} out of {N3} remaining patients.\n\n"))
-  d4 <- subset(d3, !(id %in% excl_ids3))
+  excl_ids4 <- c(na.omit(incl_ids3[!incl_ids3 %in% incl_ids4]))
+  no_dropped4 <- length(excl_ids4)
+  cat(glue::glue("\nDropping {no_dropped4} out of {N4} remaining patients.\n\n"))
+  d5 <- subset(d4, !id %in% excl_ids4)
   # EDSS did not drop back below six:
   message("\nEvaluating the final criterion - EDSS ≥ 6 remaining until the end of observation period ...\n\n")
-  N4 <- length(unique(d4$id))
+  N5 <- length(unique(d5$id))
   # Keep only cases with a valid last EDSS observation ≥ 6
-  d5 <- d4 |>
+  d6 <- d5 |>
     left_join(
-      d4 |>
+      d5 |>
         group_by(id) |>
         filter(row_number() == n()) |>
         summarise(last_edss = edss, last_relapse_time = days_after_relapse),
@@ -125,26 +129,26 @@ determine_aggressive_phenotype <- function(demographics, relapses, edss, eye_che
     ) |>
     filter(last_edss >= 6 & last_relapse_time > 30)
   # All of these need to be EDSS ≥ 6
-  d6 <- full_join(
-      d5 |>
+  d7 <- full_join(
+      d6 |>
         filter(edss >= 6 & last_relapse_time > 30 & edss_time < 10) |>
         group_by(id) |>
         filter(row_number() == n()),
-      d5 |>
+      d6 |>
         filter(edss_time >= 10)
     ) |>
     suppressMessages() |>
     arrange(id)
   # Extract patients who fulfill criteria for aggressive MS:
-  aggressiveMS <- sapply(unique(d6$id), function(i) {
-    all(na.omit(subset(d6, id == i)$edss >= 6))
+  aggressiveMS <- sapply(unique(d7$id), function(i) {
+    all(na.omit(subset(d7, id == i)$edss >= 6))
   })
-  aggressiveMSids <- unique(d6$id)[aggressiveMS]
-  excl_ids4 <- incl_ids3[!(incl_ids3 %in% aggressiveMSids)]
-  no_dropped4 <- length(excl_ids4)
+  aggressiveMSids <- unique(d7$id)[aggressiveMS]
+  excl_ids5 <- incl_ids4[!incl_ids4 %in% aggressiveMSids]
+  no_dropped5 <- length(excl_ids5)
   K <- length(aggressiveMSids)
-  perc_aggr <- paste0(sprintf("%.2f", round(100*K/N2, 2)),"%")
-  cat(glue::glue("\nDropping {no_dropped4} out of {N4} remaining patients.\n\n"))
+  perc_aggr <- paste0(sprintf("%.2f", round(100 * K / N3, 2)),"%")
+  cat(glue::glue("\nDropping {no_dropped5} out of {N5} remaining patients.\n\n"))
   message(glue::glue(
     "\n\nThis has left {K} out of total {N2} eligible patients ({perc_aggr})
 being classified as suffering the aggressive form of MS.\n\n"
@@ -159,10 +163,9 @@ as suffering the aggressive form are shown for control.\n"
     spl <- split(aggressiveMSids, bins)
     pb <- txtProgressBar(min = 0, max = length(spl), style = 3) # text based bar
     for(i in seq_len(length(spl))) {
-      plt <-
-        d5 |>
+      plt <- d5 |>
         filter(id %in% spl[[i]]) |>
-        mutate(`Following relapse` = if_else(days_after_relapse < 30, T, F)) |>
+        mutate(`Following relapse` = if_else(days_after_relapse < 30, TRUE, FALSE)) |>
         ggplot() +
         aes(x = edss_time, y = edss, group = id) +
         geom_point(size = 1.3, aes(colour = `Following relapse`)) +
@@ -181,21 +184,21 @@ as suffering the aggressive form are shown for control.\n"
   # Prepare a text summarising the process:
   txt <- glue::glue(
     "Data from {N0} patients were extracted from a local database. Out of these,
-{no_pp} were excluded due to a diagnosis of primary progressive multiple
-sclerosis. Out of the remaining {N1} patients, {N2} patients met the
-criterion of a minimum of 10 years observation time, as defined by
-recorded EDSS scores. Of these, {no_dropped2} patients did not meet
-the criterion of EDSS ≥ 6 within the first 10 years of disease.
-Further {no_dropped3} patients did not meet the criterion of sustaining EDSS ≥ 6
-until the end of the observation period and {no_dropped4} patients did not
-meet the criterion of sustaining EDSS ≥ 6 logitudinally.
-The final sample thus comprised {N2} patients, of whom {K}
-({perc_aggr}) met criteria for aggressive disease."
+{no_lowobs} were excluded due to having less than four EDSS observations,
+and {no_pp} were excluded due to a diagnosis of primary progressive multiple
+sclerosis or missing phenotype information. Out of the remaining {N2}
+patients, {N3} patients met the criterion of a minimum of 10 years observation
+time, as defined by recorded EDSS scores. Of these, {no_dropped3} patients did
+not meet the criterion of EDSS ≥ 6 within the first 10 years of disease.
+Further {no_dropped4} patients did not meet the criterion of sustaining EDSS ≥ 6
+until the end of the observation period and {no_dropped5} patients did not meet
+the criterion of sustaining EDSS ≥ 6 logitudinally.
+The final sample thus comprised {N3} patients, of whom {K} ({perc_aggr}) met
+criteria for aggressive disease."
   )
   message(glue::glue(paste0(txt, "\n\n")))
   # Prepare data:
-  df <-
-    demographics |>
+  df <- demographics |>
     filter(id %in% incl_ids1) |>
     mutate(aggressive_disease = if_else(id %in% aggressiveMSids, 1, 0))
   # Return results:
