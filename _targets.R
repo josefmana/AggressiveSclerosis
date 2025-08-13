@@ -33,6 +33,18 @@ list(
       relapses = raw_data$relapses,
       edss = raw_data$edss,
       eye_check = FALSE
-    ) |> suppressWarnings()
+    ) |>
+      suppressWarnings()
+  ),
+  tar_target(
+    name = finished_data,
+    command = preprocess_predictors(
+      d0 = classified_data$data,
+      t = raw_data$treatment,
+      m = raw_data$mri,
+      c = raw_data$csf,
+      o = raw_data$ocb,
+      chol = raw_data$cholesterol
+    )
   )
 )

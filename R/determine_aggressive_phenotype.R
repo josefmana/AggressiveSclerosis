@@ -150,7 +150,7 @@ determine_aggressive_phenotype <- function(demographics, relapses, edss, eye_che
   perc_aggr <- paste0(sprintf("%.2f", round(100 * K / N3, 2)),"%")
   cat(glue::glue("\nDropping {no_dropped5} out of {N5} remaining patients.\n\n"))
   message(glue::glue(
-    "\n\nThis has left {K} out of total {N2} eligible patients ({perc_aggr})
+    "\n\nThis has left {K} out of total {N3} eligible patients ({perc_aggr})
 being classified as suffering the aggressive form of MS.\n\n"
   ))
   # Sanity check:
@@ -199,8 +199,8 @@ criteria for aggressive disease."
   message(glue::glue(paste0(txt, "\n\n")))
   # Prepare data:
   df <- demographics |>
-    filter(id %in% incl_ids1) |>
-    mutate(aggressive_disease = if_else(id %in% aggressiveMSids, 1, 0))
+    filter(id %in% incl_ids2) |>
+    mutate(aggressive = if_else(id %in% aggressiveMSids, 1, 0))
   # Return results:
   list(data = df, text = txt)
 }
