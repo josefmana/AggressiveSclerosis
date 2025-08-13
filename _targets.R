@@ -41,6 +41,7 @@ list(
     command = preprocess_predictors(
       d0 = classified_data$data,
       t = raw_data$treatment,
+      r = raw_data$relapses,
       m = raw_data$mri,
       c = raw_data$csf,
       o = raw_data$ocb,

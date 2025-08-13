@@ -1,13 +1,14 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
 classified_data|stem|8fc08dac669fe700|5ff032399fe6e18b|cc5a2a3b399a2dc0|1530294485||t20312.4492740743s|s45633b|45633|rds|local|vector|||49.961||
-data_file|stem|a543b7c66e6dde33|37cd38e2c78249b6|2c530c1562a7fbd1|-679625259|/Volumes/Extreme SSD/Joska Mana/pro Josef Mana imed export 28_3_2025 data.xlsx|t20182.5125694444s||17137741|file|local|vector|||||_paths_ missing files VolumesExtreme SSDJoska Manapro Josef Mana imed export 28_3_2025 data.xlsx
+data_file|stem|a543b7c66e6dde33|37cd38e2c78249b6|2c530c1562a7fbd1|-679625259|/Volumes/Extreme SSD/Joska Mana/pro Josef Mana imed export 28_3_2025 data.xlsx|t20182.5125694444s|s17137741b|17137741|file|local|vector|||0||
+raw_data|stem|376538fe7b34d369|b8a98c56a5cb5920|2d191a3c295237e7|-1101284392||t20313.6841370363s|s1623949b|1623949|rds|local|vector|||5.832|Expecting date in G14475  R14475C7 got Zeposia. Expecting date in H14475  R14475C8 got LE_HET. Expecting date in G14476  R14476C7 got Zeposia. Expecting date in H14476  R14476C8 got LE_HET. Expecting date in G14477  R14477C7 got Zeposia. Expecting date in H14477  R14477C8 got LE_HET. Expecting date in G14478  R14478C7 got Zeposia. Expecting date in H14478  R14478C8 got LE_HET. Expecting date in G14479  R14479C7 got Zeposia. Expecting date in H14479  R14479C8 got LE_HET. Expecting date in G14480  R14480C7 got Zeposia. Expecting date in H14480  R14480C8 got LE_HET. Expecting date in G14481  R14481C7 got Zeposia. Expecting date in H14481  R14481C8 got LE_HET. Expecting date in G14482  R14482C7 got Zeposia. Expecting date in H14482  R14482C8 got LE_HET. Expecting date in G14483  R14483C7 got Zeposia. Expecting date in H14483  R14483C8 got LE_HET. Expecting date in G14484  R14484C7 got Zeposia. Expecting date in H14484  R14484C8 got LE_HET. Expecting numeric in F2  R2C6 got zrušeno. Expecting numeric in G2  R2C7 got zrušeno. Expecting numeric in I2  R2C9 got zrušeno. Expecting numeric in J2  R2C10 got zrušeno. Expecting numeric in J15  R15C10 got  ,3. Expecting numeric in G17  R17C7 got dodáme. Expecting numeric in I17  R17C9 got dodáme. Expecting numeric in J17  R17C10 got dodáme. Expecting numeric in F18  R18C6 got storno. Expecting numeric in G18  R18C7 got storno. Expecting numeric in H18  R18C8 got storno. Expecting numeric in I18  R18C9 got storno. Expecting numeric in J18  R18C10 got storno. Expecting numeric in K18  R18C11 got storno. Expecting numeric in L18  R18C12 got storno. Expecting numeric in M18  R18C13 got storno. Expecting numeric in N18  R18C14 got storno. Expecting numeric in O18  R18C15 got storno. Expecting numeric in P18  R18C16 got storno. Expecting numeric in Q18  R18C17 got storno. Expecting numeric in F19  R19C6 got storno. Expec|
 specify_data_structure|function|121a6a48db4f3542
 recode_typos|function|7ae8c9fa513e7bc9
 preprocess_predictors_relapses|function|9673d7b8b3ad75fa
 preprocess_predictors_treatment|function|66a8621259e570ab
 add_time_to_event|function|c0deee239160ef0e
-preprocess_predictors_mri|function|e9d391b8c6415bd1
+preprocess_predictors_mri|function|1a5b76e54cf344cc
 prepare_data|function|706efe3d3613df97
 determine_aggressive_phenotype|function|57edb4b5473260ce
-preprocess_predictors|function|eabd22354ad41f29
-raw_data|stem|376538fe7b34d369|b8a98c56a5cb5920|34c600a13ede79ad|-1101284392||t20283.4057393606s||1623949|rds|local|vector|||0.068||object data_file not found
+preprocess_predictors|function|161920c9d141e3d9
+finished_data|stem|44f3b32eb9cb444f|bca9ea4cdadfd5b2|5dff882a1ce11b51|-196293313||t20313.726851249s|s141764b|141764|rds|local|vector|||0.975||

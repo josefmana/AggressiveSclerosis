@@ -38,16 +38,22 @@ preprocess_predictors_mri <- function(d, onset) {
   # Put it all together:
   onset |>
     select(id) |>
-    left_join(map_dfr(c(quo(close2), quo(close5), quo(close10)), function(i) {
+    left_join(lapply(c(quo(close2), quo(close5), quo(close10)), function(i) {
       y <- readr::parse_number(rlang::quo_text(i))
-      d1 |>
-        left_join(dates, by = join_by(id)) |>
-        mutate(keep = mri_date == .data[[as.character(y)]]) |>
-        filter(keep) |>
-        select(id, t2_lesions_volume, t1_blackholes_volume, normalised_brain_atrophz_bpf_sv, t1_tbv_sv,
-               corpus_callosum_volume, !!i) |>
-        rename("mri_years_before" = !!i) |>
-        rename_with(~paste0(.x, "_y", y), -c("id"))
-    }),
+      onset |>
+        select(-onset) |>
+        left_join(
+          d1 |>
+            left_join(dates, by = join_by(id)) |>
+            mutate(keep = mri_date == .data[[as.character(y)]]) |>
+            filter(keep) |>
+            select(id, t2_lesions_volume, t1_blackholes_volume, normalised_brain_atrophz_bpf_sv, t1_tbv_sv,
+                   corpus_callosum_volume, !!i) |>
+            rename("mri_years_before" = !!i) |>
+            rename_with(~paste0(.x, "_y", y), -c("id")),
+          by = join_by(id)
+        )
+    }) |>
+      reduce(left_join, by = join_by(id)),
     by = join_by(id))
 }
