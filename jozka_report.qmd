@@ -1,0 +1,182 @@
+---
+title: "Data Import (short report)"
+author: "Josef Mana"
+date: "`r Sys.Date()`"
+format:
+  html: 
+    embed-resources: true
+    code-fold: true
+    toc: true
+    theme: united
+warning: false
+---
+
+```{r}
+#| label: "envir"
+#| output: false
+
+# Load packages instrumental for the report:
+library(tidyverse)
+library(targets)
+
+# Set-up targets variables:
+upstore <- here::here(tar_config_get("store"))
+tar_source(here::here("R"))
+tar_load(raw_data)
+```
+
+In this report, I showcase data import procedures and basic data description for the `AggressiveSclerosis` project wherein the goal is to identify the most significant predictors among a set of reasonable candidate predictors of a more aggressive phenotype of Multiple Sclerosis (MS).
+
+The whole process is being document on its GitHub repository: [https://github.com/josefmana/AggressiveSclerosis.git](https://github.com/josefmana/AggressiveSclerosis.git).
+
+# Step 1: Define Aggressive MS
+
+The primary outcome of this first report is the `determine_aggressive_phenotype()` function which implement an algorithm diagnosing aggressive phenotype of MS to the sample of patients eligible for this study. The function is based on Expanded Disability Status Scale (EDSS) measurement taken at least half a year away from a relapse, and takes the following steps:
+
+1. Exclude patients with less than four EDSS measurements.
+2. Exclude patients with Primary Progressive phenotype of MS.
+3. Exclude patients with less than 10 years of disease duration.
+4. Label MS of patients with **no** $EDSS \geq 6$ during the first 10 years as *non-agressive*.
+5. Label MS of patients who did **not** sustain $EDSS \geq 6$ for more than 6 months as *non-agressive*.
+6. Label MS of patients who did **not** sustain $EDSS \geq 6$ until the end of observation period as *non-agressive*.
+7. Label MS of the remaining patients as *aggressive*.
+
+Moreover, the function prepares and prints a text summarising the process and allows for an eye check of the data of the patients diagnosed with aggressive MS for control.
+
+This is the function in action:
+
+:::{.callout-tip collapse="false"}
+## Determining Aggressive MS Phenotype
+
+```{r}
+#| label: "outcome-demo"
+#| message: true
+#| code-fold: false
+#| cache: false
+
+data <- determine_aggressive_phenotype(
+  demographics = raw_data$id,
+  relapses = raw_data$relapses,
+  edss = raw_data$edss,
+  eye_check = TRUE
+)
+```
+:::
+
+# Step 2: Preprocess Predictor Variables
+
+The next step was prepare predictor pool for variables that will be used to help understand the risk associated with agressive form of MS. the following predictors were prepared:
+
+  - **Treatment variables:**
+    - Percentage of time spent using Platform (1^st^ line) medication during the first 5 and 10 years of disease.
+    - Percentage of time spent using HET (2^nd^ line) medication during the first 5 and 10 years of disease.
+    - Percentage of time spent using LE HET (2^nd^ line) medication during the first 5 and 10 years of disease.
+    - Time to first medication (Platform, HET or LE HET)
+  - **Symptoms:**:
+    - number of relapses during the first 10 years of the disease
+  - **MRI variables:**
+    - T2 lesions volume at the closes point before years 2, 5 and 10 of the disease course
+    - T1 blacholes volume at the closes point before years 2, 5 and 10 of the disease course
+    - Brain Atrophy at the closes point before years 2, 5 and 10 of the disease course
+    - T1 TBV at the closes point before years 2, 5 and 10 of the disease course
+    - Corpus Callosum volume at the closes point before years 2, 5 and 10 of the disease course
+
+Preprocessing of these variables is implemented in the function `preprocess_predictors()`.
+
+```{r}
+#| label: "predictor-demo"
+#| code-fold: false
+
+pred_data <- preprocess_predictors(
+  d0 = data$data,
+  t = raw_data$treatment,
+  r = raw_data$relapses,
+  m = raw_data$mri,
+  c = raw_data$csf,
+  o = raw_data$ocb,
+  chol = raw_data$cholesterol
+)
+```
+
+:::{.callout-tip collapse="false"}
+## Treatment and MRI Distributions
+
+```{r}
+#| label: "namings"
+#| echo: false
+
+naming <- data.frame(
+  var = names(pred_data)[-c(1:3, 17, 23, 29)],
+  nam = c(
+    "Platform_5", "Platform_10", "HET_5", "HET_10", "LE HET_5", "LE HET_10", "Time to Treat",
+    "Relapse Count",
+    "T2 lesions_Y2", "T1 blackholes_Y2", "Brain Atrophy_Y2", "T1 TBV_Y2", "Corpus Callosum_Y2",
+    "T2 lesions_Y5", "T1 blackholes_Y5", "Brain Atrophy_Y5", "T1 TBV_Y5", "Corpus Callosum_Y5",
+    "T2 lesions_Y10", "T1 blackholes_Y10", "Brain Atrophy_Y10", "T1 TBV_Y10", "Corpus Callosum_Y10"
+  ),
+  typ = c(
+    rep("Medication", 6), "Medication time", "Relapses", rep("MRI", 15)
+  )
+)
+```
+
+@fig-treat and @fig-mri show data distribution of treatment and MRI variables separately for patient without and with diagnosis of aggressive MS and p-value from a Mann-Whitney test comparing these distributions.
+
+```{r}
+#| label: "fig-treat"
+#| fig-cap: "Violin plots and Mann-Whitney test results comparig treatment distribution variables between study groups"
+#| fig-height: 6
+
+med_data <- pred_data |>
+  select(id, aggressive, all_of(naming$var[naming$typ == "Medication"]))
+
+for(i in which(naming$typ == "Medication")) {
+  med_data[[naming$nam[i]]] <- med_data[[naming$var[i]]]
+}
+
+med_data <- med_data |>
+  select(id, aggressive, all_of(naming$nam[naming$typ == "Medication"]))
+
+med_data |>
+  pivot_longer(-c(id, aggressive), names_to = c("Medication", "Year"), names_sep = "_", values_to = "Value") |>
+  ggpubr::ggviolin(
+    x = "aggressive", xlab = "Agressive MS",
+    y = "Value",
+    facet.by = c("Medication", "Year"),
+    add = "median",
+    short.panel.labs = FALSE
+  ) +
+  ggpubr::stat_compare_means(vjust = -1, hjust = -0.8, label = "p.format")
+```
+
+```{r}
+#| label: "fig-mri"
+#| fig-cap: "Box plots and Mann-Whitney test results comparig MRI variables' distribution variables between study groups"
+#| fig-height: 10
+
+mri_data <- pred_data |>
+  select(id, aggressive, all_of(naming$var[naming$typ == "MRI"]))
+
+for(i in which(naming$typ == "MRI")) {
+  mri_data[[naming$nam[i]]] <- mri_data[[naming$var[i]]]
+}
+
+mri_data <- mri_data |>
+  select(id, aggressive, all_of(naming$nam[naming$typ == "MRI"]))
+
+mri_data |>
+  pivot_longer(-c(id, aggressive), names_to = c("Measure", "Year"), names_sep = "_", values_to = "Value") |>
+  mutate(Year = factor(Year, levels = c("Y2", "Y5", "Y10"), ordered = TRUE)) |>
+  ggpubr::ggboxplot(
+    x = "aggressive", xlab = "Agressive MS",
+    y = "Value",
+    facet.by = c("Measure", "Year"),
+    scales = "free_y",
+    repel = TRUE
+  ) +
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.25))  # 10% extra space on top
+  ) +
+  ggpubr::stat_compare_means(vjust = -1.2, label = "p.format")
+```
+:::
